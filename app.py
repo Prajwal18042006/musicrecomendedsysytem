@@ -4,9 +4,10 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+# 🎵 Initialize app
 app = FastAPI(title="🎵 Music Recommendation API")
 
-# ✅ 1. Load your dataset
+# ✅ 1. Load dataset
 df = pd.read_csv("tcc_ceds_music.csv")
 
 # ✅ 2. Create combined features if not present
@@ -17,11 +18,11 @@ if 'combined_features' not in df.columns:
         df['artist_name'].fillna('')
     )
 
-# ✅ 3. TF-IDF feature matrix
+# ✅ 3. Create TF-IDF features
 tfidf = TfidfVectorizer(stop_words='english')
 tfidf_matrix = tfidf.fit_transform(df['combined_features'])
 
-# ✅ 4. Request schema
+# ✅ 4. Define request schema
 class SongRequest(BaseModel):
     song_name: str
 
@@ -37,7 +38,12 @@ def recommend(song_title):
     top_indices = sim_scores.argsort()[-11:-1][::-1]
     return df[['track_name', 'artist_name', 'genre']].iloc[top_indices].to_dict(orient='records')
 
-# ✅ 6. API route
+# ✅ 6. Home route (so you see something when visiting Render URL)
+@app.get("/")
+def home():
+    return {"message": "🎵 Music Recommendation API is live on Render!"}
+
+# ✅ 7. Recommendation route
 @app.post("/recommend")
 def get_recommendations(request: SongRequest):
     results = recommend(request.song_name)
